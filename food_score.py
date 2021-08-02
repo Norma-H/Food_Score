@@ -3,14 +3,19 @@ from datetime import datetime
 
 
 class Store:
-    def __init__(self, name, address, rating, coordinates):
+    def __init__(self, name, address, rating, coordinates, starting_loc):
         self.name = name
         self.address = address
         self.rating = rating
         self.location = coordinates
-        self.distance = 0
+        self.distance = self.get_distance(starting_loc)
 
     def get_distance(self, starting_loc):
+        """
+        takes in the center location
+        retrieves the distance in km and calculates it to miles
+        returns the distance (float) in miles
+        """
         dist = gmaps.distance_matrix(starting_loc, self.location)
         dist = dist['rows'][0]['elements'][0]['distance']['text'].split(' ')
         dist = float(dist[0])
@@ -43,23 +48,25 @@ def get_store_results(lookup_address):
 
 
 def main():
-    lookup_address = '223 Corlies 07711'  # input("Enter the lookup location: ").strip()
+    # TODO: get the address that the program ended up using from the user input, and print the used address
+    lookup_address = '245 east 93rd 10128'  # input("Enter the lookup location: ").strip()
     places_result = get_store_results(lookup_address)
     # create list of all the instantiated store classes from the results
     stores = []
     for one_store in places_result['results']:
-        #print(one_store, end='\n\n')
+        # print(one_store, end='\n\n')
         name = one_store['name']
         address = one_store['formatted_address']
         rating = one_store['rating']
         coordinates = tuple([val for val in one_store['geometry']['location'].values()]) # list of the lat and long
-        store = Store(name, address, rating, coordinates)
+        store = Store(name, address, rating, coordinates, lookup_address)
         stores.append(store)
-        distance = store.get_distance(lookup_address)
-        print(f'{distance=}', end='\n\n')
-        # TODO: order the list by distance
     # find the score of the lookup_address
-    score = len(stores)
+    # manually filter the stores to within 1.5 miles of lookup address
+    limited_dist_stores = [store for store in stores if store.distance <= 1.5]
+    limited_dist_stores.sort(key=lambda x: x.distance)  # sort the list by distance in ascending order
+    [print(f'{store.name}, {store.distance}') for store in limited_dist_stores]
+    score = len(limited_dist_stores)  # the score is the number of stores within 1.5 miles
     print(f'Your food score: {score}')
 
 
