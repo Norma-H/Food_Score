@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 import googlemaps
-from housingList import addresses
-from datetime import datetime
+from housingList import unique_dev_zip
 
 
 class Store:
@@ -32,20 +31,25 @@ gmaps = googlemaps.Client(key='json_key')
 def get_store_results(lookup_address):
     # Geocoding an address
     geocode_result = gmaps.geocode(lookup_address)
+    # TODO: does not have "bounds" in the results so my hard code below of 'bounds' index does not work
+    #print(geocode_result)
 
     # getting the coordinates for the address
     coordinates = [float(val) for val in geocode_result[0]['geometry']['bounds']['northeast'].values()]
 
     # TODO: figure out why the radius is not working
-    places_result = gmaps.places(type='grocery_or_supermarket', location=coordinates, radius=1609)
+    places_result = gmaps.places(type='grocery_or_supermarket', location=coordinates, radius=1609)  # 1609 is 1 mile
     return places_result
 
 
 def instantiate_stores(places_result, lookup_address):
-    # create list of all the instantiated store classes from the search results
+    """
+    take in the result of the search (all the stores) and the original address
+    create list of all the instantiated store classes from the search results
+    return the list of the instances
+    """
     stores = []
     for one_store in places_result['results']:
-        # print(one_store, end='\n\n')
         name = one_store['name']
         address = one_store['formatted_address']
         rating = one_store['rating']
@@ -57,17 +61,15 @@ def instantiate_stores(places_result, lookup_address):
 
 def main():
     # TODO: get the address that the program ended up using from the user input, and print the used address
-    lookup_address = '245 East 93rd 10128'  # input("Enter the lookup location: ").strip()
-    places_result = get_store_results(lookup_address)
-    stores = instantiate_stores(places_result, lookup_address)
-    # find the score of the lookup_address
-    # manually filter the stores to within 1 mile of lookup address
-    limited_dist_stores = [store for store in stores if store.distance <= 1]
-    limited_dist_stores.sort(key=lambda x: x.distance)  # sort the list by distance in ascending order
-    #[print(f'{store.name}, {store.distance}') for store in limited_dist_stores]
-    score = len(limited_dist_stores)  # the score is the number of stores within 1 mile
-    print(f'Your food score: {score}')
-    print(addresses)
+    for lookup_address in unique_dev_zip:
+        places_result = get_store_results(lookup_address)
+        stores = instantiate_stores(places_result, lookup_address)
+        limited_dist_stores = [store for store in stores if store.distance <= 1]  # manually filter to 1 mile radius
+        limited_dist_stores.sort(key=lambda x: x.distance)  # sort the list by distance in ascending order
+        score = len(limited_dist_stores)  # the score is the number of stores within 1 mile
+        print(f'Food score for {lookup_address}: {score}')
+    # lookup_address = '245 East 93rd 10128'  # input("Enter the lookup location: ").strip()
+    # [print(f'{store.name}, {store.distance}') for store in limited_dist_stores]
 
 
 if __name__ == '__main__':
