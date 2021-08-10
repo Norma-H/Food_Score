@@ -14,10 +14,10 @@ unique_dev_zip = sorted(set(dev_zip))
 
 
 def main():
-    # print(f'addresses with zipcodes = {len(addresses)}')
-    # print(f'developments = {len(set(developments))}')
-    # print(f'developments with zipcodes unique = {len(unique_dev_zip)}')
-    [print(val) for val in unique_dev_zip]
+    print(f'addresses with zipcodes = {len(addresses)}')
+    print(f'developments = {len(set(developments))}')
+    print(f'developments with zipcodes unique = {len(unique_dev_zip)}')
+    #[print(val) for val in unique_dev_zip]
 
 if __name__ == '__main__':
     main()
