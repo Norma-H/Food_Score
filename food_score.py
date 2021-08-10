@@ -2,7 +2,7 @@
 
 import googlemaps
 from housingList import unique_dev_zip
-import pandas as pd
+import json
 
 
 class Store:
@@ -26,8 +26,11 @@ class Store:
         return self.distance
 
 
-key_file = pd.read_csv('key.csv', header=None)
-key_code = key_file[0].values[0]
+# read in Client key from json file
+file = open("key.json", "r")
+jsonStr = file.read()
+key_list = json.loads(jsonStr)
+key_code = key_list['key']
 gmaps = googlemaps.Client(key=key_code)
 
 
@@ -77,8 +80,6 @@ def main():
         limited_dist_stores.sort(key=lambda x: x.distance)  # sort the list by distance in ascending order
         score = len(limited_dist_stores)  # the score is the number of stores within 1 mile
         print(f'Food score for {lookup_address}: {score}')
-    # lookup_address = '245 East 93rd 10128'  # input("Enter the lookup location: ").strip()
-    # [print(f'{store.name}, {store.distance}') for store in limited_dist_stores]
 
 
 if __name__ == '__main__':
