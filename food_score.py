@@ -32,14 +32,19 @@ def get_store_results(lookup_address):
     # Geocoding an address
     geocode_result = gmaps.geocode(lookup_address)
     # TODO: does not have "bounds" in the results so my hard code below of 'bounds' index does not work
-    #print(geocode_result)
+    # print(geocode_result)
+    try:
+        # getting the coordinates for the address
+        coordinates = [float(val) for val in geocode_result[0]['geometry']['bounds']['northeast'].values()]
 
-    # getting the coordinates for the address
-    coordinates = [float(val) for val in geocode_result[0]['geometry']['bounds']['northeast'].values()]
-
-    # TODO: figure out why the radius is not working
-    places_result = gmaps.places(type='grocery_or_supermarket', location=coordinates, radius=1609)  # 1609 is 1 mile
-    return places_result
+        # TODO: figure out why the radius is not working
+        places_result = gmaps.places(type='grocery_or_supermarket', location=coordinates, radius=1609)  # 1609 is 1 mile
+        return places_result
+    except KeyError:
+        coordinates = [float(val) for val in geocode_result[0]['geometry']['location'].values()]
+        # TODO: figure out why the radius is not working
+        places_result = gmaps.places(type='grocery_or_supermarket', location=coordinates, radius=1609)  # 1609 is 1 mile
+        return places_result
 
 
 def instantiate_stores(places_result, lookup_address):
@@ -52,6 +57,7 @@ def instantiate_stores(places_result, lookup_address):
     for one_store in places_result['results']:
         name = one_store['name']
         address = one_store['formatted_address']
+        # TODO: not all stores have a rating... fix the error
         rating = one_store['rating']
         coordinates = tuple([val for val in one_store['geometry']['location'].values()])  # list of the lat and long
         store = Store(name, address, rating, coordinates, lookup_address)
