@@ -2,6 +2,7 @@
 
 import googlemaps
 from housingList import unique_dev_zip
+import pandas as pd
 
 
 class Store:
@@ -25,7 +26,9 @@ class Store:
         return self.distance
 
 
-gmaps = googlemaps.Client(key='json_key')
+key_file = pd.read_csv('key.csv', header=None)
+key_code = key_file[0].values[0]
+gmaps = googlemaps.Client(key=key_code)
 
 
 def get_store_results(lookup_address):
