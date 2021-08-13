@@ -3,6 +3,8 @@
 import googlemaps
 from housingList import unique_dev_zip
 import json
+import pandas as pd
+from pandas import Series, DataFrame
 
 
 class Store:
@@ -37,8 +39,6 @@ gmaps = googlemaps.Client(key=key_code)
 def get_store_results(lookup_address):
     # Geocoding an address
     geocode_result = gmaps.geocode(lookup_address)
-    # TODO: does not have "bounds" in the results so my hard code below of 'bounds' index does not work
-    # print(geocode_result)
     try:
         # getting the coordinates for the address
         coordinates = [float(val) for val in geocode_result[0]['geometry']['bounds']['northeast'].values()]
@@ -63,8 +63,8 @@ def instantiate_stores(places_result, lookup_address):
     for one_store in places_result['results']:
         name = one_store['name']
         address = one_store['formatted_address']
-        # TODO: not all stores have a rating... fix the error
-        rating = one_store['rating']
+        if 'rating' in one_store.keys():
+            rating = one_store['rating']
         coordinates = tuple([val for val in one_store['geometry']['location'].values()])  # list of the lat and long
         store = Store(name, address, rating, coordinates, lookup_address)
         stores.append(store)
@@ -73,13 +73,22 @@ def instantiate_stores(places_result, lookup_address):
 
 def main():
     # TODO: get the address that the program ended up using from the user input, and print the used address
-    for lookup_address in unique_dev_zip:
+    filename = 'NYCHA_Scores.csv'
+    rows_list = []
+    for ind, lookup_address in enumerate(unique_dev_zip):
+        row_dict = {}
         places_result = get_store_results(lookup_address)
         stores = instantiate_stores(places_result, lookup_address)
         limited_dist_stores = [store for store in stores if store.distance <= 1]  # manually filter to 1 mile radius
         limited_dist_stores.sort(key=lambda x: x.distance)  # sort the list by distance in ascending order
         score = len(limited_dist_stores)  # the score is the number of stores within 1 mile
-        print(f'Food score for {lookup_address}: {score}')
+        # print(f'Food score for {lookup_address}: {score}')
+        row_dict['Address'] = lookup_address
+        row_dict['Score'] = score
+        rows_list.append(row_dict)
+    df = DataFrame(rows_list)
+    with open(filename, 'w') as outfile:
+         df.to_csv(outfile, index=False)
 
 
 if __name__ == '__main__':
