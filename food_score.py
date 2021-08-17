@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 import googlemaps
-from housingList import unique_dev_zip
+from housingList import one_tds_address
 import json
-import pandas as pd
 from pandas import Series, DataFrame
 
 
@@ -65,24 +64,28 @@ def instantiate_stores(places_result, lookup_address):
         address = one_store['formatted_address']
         if 'rating' in one_store.keys():
             rating = one_store['rating']
+        else:
+            rating = 'No rating'
         coordinates = tuple([val for val in one_store['geometry']['location'].values()])  # list of the lat and long
         store = Store(name, address, rating, coordinates, lookup_address)
         stores.append(store)
     return stores
 
 
+# food desert definition:
+# https://www.ers.usda.gov/data-products/food-access-research-atlas/documentation/
 def main():
     # TODO: get the address that the program ended up using from the user input, and print the used address
     filename = 'NYCHA_Scores.csv'
     rows_list = []
-    for ind, lookup_address in enumerate(unique_dev_zip):
+    for ind, lookup_address in enumerate(one_tds_address):
         row_dict = {}
         places_result = get_store_results(lookup_address)
         stores = instantiate_stores(places_result, lookup_address)
         limited_dist_stores = [store for store in stores if store.distance <= 1]  # manually filter to 1 mile radius
         limited_dist_stores.sort(key=lambda x: x.distance)  # sort the list by distance in ascending order
         score = len(limited_dist_stores)  # the score is the number of stores within 1 mile
-        # print(f'Food score for {lookup_address}: {score}')
+        print(f'Food score for {lookup_address}: {score}')
         row_dict['Address'] = lookup_address
         row_dict['Score'] = score
         rows_list.append(row_dict)
